@@ -1,0 +1,29 @@
+from flask import Flask, request, jsonify
+import joblib
+import string
+from nltk.corpus import stopwords
+
+app = Flask(__name__)
+
+# Load model and vectorizer
+model = joblib.load("fake_review_model.pkl")
+vectorizer = joblib.load("tfidf_vectorizer.pkl")
+
+def clean_text(text):
+    text = text.lower()
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    stop_words = set(stopwords.words('english'))
+    text = ' '.join(word for word in text.split() if word not in stop_words)
+    return text
+
+@app.route("/predict", methods=["POST"])
+def predict():
+    data = request.get_json()
+    review = data.get("review", "")
+    cleaned = clean_text(review)
+    vectorized = vectorizer.transform([cleaned])
+    prediction = model.predict(vectorized)[0]
+    return jsonify({"label": prediction})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
