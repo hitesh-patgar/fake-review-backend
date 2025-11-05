@@ -25,5 +25,20 @@ def predict():
     prediction = model.predict(vectorized)[0]
     return jsonify({"label": prediction})
 
+@app.route("/detect-fake-review", methods=["POST"])
+def detect_fake_review():
+   
+    data = request.get_json()
+    review = data.get("review", "")
+    if not review:
+        return jsonify({"error": "No review text provided"}), 400
+
+    cleaned = clean_text(review)
+    vectorized = vectorizer.transform([cleaned])
+    prediction = model.predict(vectorized)[0]
+
+    return jsonify({"label": prediction})
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
