@@ -43,7 +43,14 @@ def detect_fake_review():
     vectorized = vectorizer.transform([cleaned])
     prediction = model.predict(vectorized)[0]
 
-    return jsonify({"label": prediction})
+    # ✅ Normalize output to match frontend expectations
+    is_fake = True if prediction.lower() == "fake" else False
+
+    return jsonify({
+        "label": prediction,
+        "is_fake": is_fake
+    })
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
