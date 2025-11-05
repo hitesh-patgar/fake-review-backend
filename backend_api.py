@@ -1,9 +1,17 @@
 from flask import Flask, request, jsonify
 import joblib
 import string
+import nltk
 from nltk.corpus import stopwords
 
 app = Flask(__name__)
+
+# ✅ Ensure NLTK stopwords are available
+try:
+    stop_words = set(stopwords.words("english"))
+except LookupError:
+    nltk.download("stopwords")
+    stop_words = set(stopwords.words("english"))
 
 # Load model and vectorizer
 model = joblib.load("fake_review_model.pkl")
@@ -12,7 +20,6 @@ vectorizer = joblib.load("tfidf_vectorizer.pkl")
 def clean_text(text):
     text = text.lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
-    stop_words = set(stopwords.words('english'))
     text = ' '.join(word for word in text.split() if word not in stop_words)
     return text
 
@@ -27,7 +34,6 @@ def predict():
 
 @app.route("/detect-fake-review", methods=["POST"])
 def detect_fake_review():
-   
     data = request.get_json()
     review = data.get("review", "")
     if not review:
@@ -38,7 +44,6 @@ def detect_fake_review():
     prediction = model.predict(vectorized)[0]
 
     return jsonify({"label": prediction})
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
